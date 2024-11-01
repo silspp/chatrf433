@@ -1,0 +1,74 @@
+/************************************************************/
+/* Aula 34 – Projeto Chat via RF */
+/* Programação do Módulo nRF24L01. */
+/* Nessa programação criaremos um chat via RF. */
+/* IMPORTANTE: Para que não ocorra interferência entre */
+/* os protótipos das outras duplas, vocês deverão informar */
+/* nas linhas 35 e 36 deste código, o mesmo endereço de */
+/* comunicação (Até 5 caracteres em cada canal). */
+/* Link para obtenção da biblioteca. */
+/* https://github.com/nRF24/RF24/ */
+/************************************************************/
+/* As equipes deverão utilizar identificadores diferentes */
+/* em seus protótipos: 1 ou 2. */
+#define IDENTIFICADOR 1
+/************************************************************/
+/* Inclui a biblioteca de controle do módulo NRF24L01. */
+#include <RF24.h>
+/* Define os pinos de comunicação do módulo. */
+#define PINO_CE 9
+#define PINO_CSN 10
+/* Cria o objeto de controle do módulo para a biblioteca. */
+RF24 radio(PINO_CE, PINO_CSN);
+/* Variáveis auxiliares. */
+String seunome = "";
+String MSG_digitada;
+char MSG_para_ENVIAR[32];
+char MSG_RECEBIDA[32];
+/* Bloco condicional para inverter os endereços de */
+/* comunicação entre os protótipos de acordo com o */
+/* identificador acima. */
+#if IDENTIFICADOR == 1
+/* ATENÇÃO: o endereço de transmissão deve ser igual nas */
+/* linhas 35 e 39 - e o mesmo deve acontecer para endereço */
+/* de recepção nas linhas 36 e 38. */
+const byte enderecoTransmissao[6] = "00001";
+const byte enderecoRecepcao[6] = "00002";
+#else
+const byte enderecoTransmissao[6] = "00002";
+const byte enderecoRecepcao[6] = "00001";
+#endif
+void setup() {
+ /* Inicia a comunicação serial com velocidade de 9600. */
+ Serial.begin(9600);
+ /* Inicia o objeto de controle do módulo rádio. */
+ radio.begin();
+ /* Abre um canal para o envio de mensagens com endereço */
+ /* definido no início do sketch. */
+ radio.openWritingPipe(enderecoTransmissao);
+ /* Configura o canal 1 de recepção (0 a 5). Restringe que */
+ /* o canal só receberá dados deste endereço. */
+ radio.openReadingPipe(1, enderecoRecepcao);
+ /* Configura o nível de potência do módulo rádio. */
+ /* RF24_PA_MIN: Nível mínimo de potência. */
+ /* RF24_PA_LOW: Nível de potência baixo. */
+ /* RF24_PA_HIGH: Nível de potência alto. */
+ /* RF24_PA_MAX: Nível máximo de potência. */
+ radio.setPALevel(RF24_PA_MIN);
+ /* Coloca o módulo no modo de escuta, ou seja, no */
+ /* modo de recepção de dados. */
+ radio.startListening();
+ /* Inicia o chat solicitando o nome do usuário. */
+ Serial.println("Informe seu nome...");
+ /* Aguarda o usuário informar o seu nome. */
+ while (seunome == "") {
+ /* Se um nome for enviado no monitor serial, faça... */
+ if ( Serial.available() ) {
+ /* Armazene na variável o nome recebido. */
+ seunome = Serial.readStringUntil('\n');
+ /* Imprime a saudação personalizada com o nome do */
+ /* usuário. */
+ Serial.println("Bem-vindo, " + String(seunome) + "!");
+ }
+ }
+}
